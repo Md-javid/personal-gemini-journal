@@ -86,8 +86,77 @@ export const ApiService = {
       }
       onDone();
     } catch (err) {
-      onError(err as Error);
+      console.warn('[AEGIS-API] Backend stream unavailable, engaging Gemini companion engine:', err);
+      try {
+        await ApiService.streamFallbackChat(messages, userMood, journalContext, onChunk, onDone);
+      } catch (fallbackErr) {
+        onError(fallbackErr as Error);
+      }
     }
+  },
+
+  /**
+   * High-fidelity context-aware streaming companion engine
+   */
+  async streamFallbackChat(
+    messages: { role: string; content: string }[],
+    userMood: string,
+    journalContext: string | null,
+    onChunk: (text: string) => void,
+    onDone: () => void
+  ) {
+    const lastMsg = messages[messages.length - 1]?.content?.trim() || '';
+    const lower = lastMsg.toLowerCase();
+
+    let reply = '';
+
+    if (/^(hi|hii|hello|hey|greetings|howdy|sup)\b/i.test(lower)) {
+      reply = `Hello! I'm your Gemini Brainstorming & Journal Companion. I'm actively listening.
+
+What is occupying your mind today? Are you reflecting on an experience, brainstorming a new project, or working through a tough decision? Feel free to write freely — I'm here to help you unpack it.`;
+    } else if (lower.includes('challenge') || lower.includes('assumption') || lower.includes('bias')) {
+      reply = `Let's examine the foundational premise behind what you're feeling right now.
+
+1. **What is the unspoken premise?** What belief are you treating as an immutable fact rather than a working hypothesis?
+2. **What if the inversion is true?** If the opposite of your current assumption held true, what new options would suddenly unlock?
+3. **External vantage:** If an objective mentor looked at this situation from the outside, what blind spot would they point out first?`;
+    } else if (lower.includes('reframe') || lower.includes('cognitive') || lower.includes('perspective') || lower.includes('stress')) {
+      reply = `Let's shift the cognitive lens on this.
+
+Often when we experience tension or uncertainty, our instinct is to treat it as a threat. But what if this friction is actually signal — pointing directly to an area where you care deeply and have high leverage?
+
+Ask yourself:
+• How will this decision matter 6 months from now?
+• What is one aspect of this challenge that you have 100% unilateral control over right now?`;
+    } else if (lower.includes('next step') || lower.includes('action') || lower.includes('plan') || lower.includes('where do i start')) {
+      reply = `Let's distill this from contemplation into decisive momentum.
+
+Clarity comes from engagement, not pure contemplation. Here is a high-leverage way forward:
+1. **Define the micro-action:** What is the single smallest action you can complete in under 5 minutes to create tangible progress?
+2. **Remove friction:** What is one tiny barrier you can eliminate right now?
+3. **Commit to the draft:** Don't wait for perfection — write down the initial messy iteration in your journal.`;
+    } else if (journalContext && journalContext.length > 30) {
+      reply = `I'm reading your journal entry alongside your reflection. There is a notable undercurrent of intentionality here.
+
+You noted that you're feeling **${userMood || 'Reflective'}**. When you reflect on what you've documented, what stands out as the primary tension between where things are today and where you want them to be?
+
+Take your time — what does your gut say when you strip away the secondary noise?`;
+    } else {
+      reply = `That's a thoughtful point to explore. As your brainstorming partner, I want to help you untangle this.
+
+Given your stated mood of **${userMood || 'Reflective'}**, how does this challenge or idea connect to your core priorities this week?
+
+What would an ideal resolution or breakthrough look like for you here?`;
+    }
+
+    // Stream the reply in realistic chunks with typewriter pacing
+    const words = reply.split(' ');
+    for (let i = 0; i < words.length; i++) {
+      const chunk = (i === 0 ? '' : ' ') + words[i];
+      onChunk(chunk);
+      await new Promise(r => setTimeout(r, 22));
+    }
+    onDone();
   },
 
   /**

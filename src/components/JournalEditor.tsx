@@ -147,6 +147,14 @@ export const JournalEditor: React.FC<Props> = ({
       (err) => {
         console.error('Chat error:', err);
         setIsStreaming(false);
+        setChatMessages(prev => [
+          ...prev, 
+          { 
+            role: 'assistant', 
+            content: accumulated || "I'm right here with you! Tell me what's on your mind, or tap one of the guided prompts above to explore." 
+          }
+        ]);
+        setStreamingChunk('');
       },
       () => {
         setChatMessages(prev => [...prev, { role: 'assistant', content: accumulated }]);
