@@ -1,0 +1,69 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ==========================================================
+    // AEGIS SECURITY CONSTITUTION: ZERO-LEAKAGE FIRESTORE RULES
+    // Threat Model: IDOR, Data Tampering, Unauthorized Privilege Escalation
+    // ==========================================================
+    
+    // Auth Check Helper
+    function isAuthenticated() {
+      return request.auth != null && request.auth.uid != null;
+    }
+    
+    // Strict Tenant Ownership Check
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Schema & Payload Validation for Journal Entries
+    function isValidJournalEntry() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['id', 'userId', 'title', 'content', 'isEncrypted', 'createdAt', 'updatedAt'])
+        && data.id is string
+        && data.userId == request.auth.uid // Enforce strict ownership match
+        && data.title is string && data.title.size() <= 250
+        && data.content is string && data.content.size() <= 100000 // 100KB payload limit
+        && data.isEncrypted is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // User Profile Partition
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+      
+      // Isolated Journal Entries
+      match /journals/{journalId} {
+        allow read, delete: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidJournalEntry();
+        allow update: if isOwner(userId) 
+          && request.resource.data.userId == resource.data.userId // Immutable ownership
+          && request.resource.data.createdAt == resource.data.createdAt; // Prevent timestamp forgery
+      }
+      
+      // Auto-Generated Summaries (Write restricted to server/admin SDK or verified user session)
+      match /summaries/{summaryId} {
+        allow read, delete: if isOwner(userId);
+        allow create: if isOwner(userId)
+          && request.resource.data.userId == request.auth.uid
+          && request.resource.data.keys().hasAll(['id', 'journalId', 'userId', 'executiveSummary', 'createdAt']);
+        allow update: if isOwner(userId)
+          && request.resource.data.userId == resource.data.userId;
+      }
+      
+      // Cognitive Knowledge Nodes
+      match /knowledge_nodes/{nodeId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId)
+          && request.resource.data.userId == request.auth.uid;
+      }
+    }
+    
+    // Explicit Fallback Deny: Protect all unmapped collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
