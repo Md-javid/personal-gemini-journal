@@ -10,7 +10,9 @@ import {
   LogIn, 
   Users, 
   Check, 
-  ChevronDown 
+  ChevronDown,
+  Sun,
+  Moon
 } from 'lucide-react';
 import type { UserProfile } from '../types';
 import { CryptoVault } from '../services/cryptoVault';
@@ -35,9 +37,16 @@ export const Navbar: React.FC<Props> = ({
   onOpenAuth
 }) => {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const isVaultUnlocked = CryptoVault.isUnlocked();
   const isLiveFirebase = FirebaseService.isLiveFirebase();
   const sandboxUsers = FirebaseService.getAvailableSandboxUsers();
+
+  const toggleTheme = () => {
+    const nextTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(nextTheme);
+    document.documentElement.setAttribute('data-theme', nextTheme);
+  };
 
   const handleSwitchSandbox = (uid: string) => {
     FirebaseService.switchSandboxUser(uid);
@@ -114,6 +123,25 @@ export const Navbar: React.FC<Props> = ({
             <>
               <Lock size={14} className="text-violet" />
               <span>MindVault E2EE</span>
+            </>
+          )}
+        </button>
+
+        {/* Theme Toggle Button (Light/Dark Glassmorphism) */}
+        <button 
+          className="btn-pill-ghost theme-toggle-btn"
+          onClick={toggleTheme}
+          title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
+        >
+          {theme === 'light' ? (
+            <>
+              <Moon size={14} className="text-violet" />
+              <span>Dark</span>
+            </>
+          ) : (
+            <>
+              <Sun size={14} className="text-amber" />
+              <span>Light</span>
             </>
           )}
         </button>
