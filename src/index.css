@@ -310,7 +310,7 @@ button {
   background: rgba(255, 255, 255, 0.7);
   border: 1px solid var(--border-subtle);
   color: var(--text-primary);
-  padding: 6px 14px;
+  padding: 6px 13px;
   border-radius: var(--radius-full);
   font-size: 13px;
   font-weight: 600;
@@ -318,9 +318,24 @@ button {
   align-items: center;
   gap: 6px;
   box-shadow: 0 2px 5px rgba(15, 23, 42, 0.04);
+  white-space: nowrap;
+  flex-shrink: 0;
+  height: 38px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 .btn-pill-ghost:hover {
   background: #ffffff;
+  border-color: var(--border-medium);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+[data-theme="dark"] .btn-pill-ghost {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--border-subtle);
+  color: var(--text-primary);
+}
+[data-theme="dark"] .btn-pill-ghost:hover {
+  background: rgba(255, 255, 255, 0.1);
   border-color: var(--border-medium);
 }
 .btn-pill-ghost.vault-status.unlocked {
@@ -428,7 +443,16 @@ button {
 .nav-left, .nav-right {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.nav-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 8px;
+  flex-shrink: 0;
 }
 
 .brand-badge {
@@ -437,6 +461,7 @@ button {
   gap: 10px;
   cursor: pointer;
   user-select: none;
+  flex-shrink: 0;
 }
 .brand-icon-wrapper {
   width: 38px;
@@ -448,6 +473,7 @@ button {
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 14px rgba(5, 150, 105, 0.15);
+  flex-shrink: 0;
 }
 .brand-text {
   display: flex;
@@ -475,6 +501,7 @@ button {
   border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
   margin-left: 12px;
+  flex-shrink: 0;
 }
 [data-theme="dark"] .nav-links {
   background: rgba(255, 255, 255, 0.03);
@@ -489,6 +516,7 @@ button {
   font-weight: 600;
   color: var(--text-secondary);
   background: transparent;
+  white-space: nowrap;
 }
 .nav-tab:hover {
   color: var(--text-primary);
@@ -506,23 +534,47 @@ button {
 /* Profile menu */
 .profile-menu-wrapper {
   position: relative;
+  flex-shrink: 0;
 }
 .profile-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
-  background: rgba(255, 255, 255, 0.8);
+  gap: 9px;
+  height: 38px;
+  max-height: 38px;
+  background: rgba(255, 255, 255, 0.85);
   border: 1px solid var(--border-subtle);
-  padding: 4px 14px 4px 6px;
+  padding: 3px 12px 3px 5px;
   border-radius: var(--radius-full);
   box-shadow: 0 2px 5px rgba(15, 23, 42, 0.04);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
 }
-.profile-btn:hover {
+.profile-btn:hover, .profile-btn.active {
   background: #ffffff;
+  border-color: var(--border-medium);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+[data-theme="dark"] .profile-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--border-subtle);
+}
+[data-theme="dark"] .profile-btn:hover, [data-theme="dark"] .profile-btn.active {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--border-medium);
+}
+.profile-chevron {
+  transition: transform 0.2s ease;
+}
+.profile-chevron.rotated {
+  transform: rotate(180deg);
 }
 .avatar-circle {
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-violet) 100%);
   display: flex;
@@ -531,39 +583,67 @@ button {
   font-size: 13px;
   font-weight: 700;
   color: #fff;
+  flex-shrink: 0;
 }
 .profile-label {
   display: flex;
   flex-direction: column;
   text-align: left;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  min-width: 0;
 }
 .user-name {
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 700;
   color: var(--text-primary);
-  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+  display: block;
 }
 .user-role {
   font-size: 10px;
   font-weight: 600;
   color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+  display: block;
 }
 
 .dropdown-menu {
   position: absolute;
-  top: calc(100% + 10px);
+  top: calc(100% + 8px);
   right: 0;
   width: 290px;
+  max-width: min(290px, calc(100vw - 24px));
   padding: 14px;
-  z-index: 200;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
+  z-index: 250;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-dropdown);
+  box-shadow: 0 16px 36px -4px rgba(15, 23, 42, 0.16), 0 0 0 1px rgba(15, 23, 42, 0.05);
+  animation: fadeInDown 0.15s ease-out;
 }
 [data-theme="dark"] .dropdown-menu {
-  background: rgba(14, 20, 32, 0.95);
+  background: rgba(14, 20, 32, 0.96);
+  box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .dropdown-header {
   display: flex;
@@ -2166,3 +2246,46 @@ button {
   background: rgba(16, 185, 129, 0.15);
   color: #86efac;
 }
+
+/* -------------------------------------------------------------
+   RESPONSIVE NAVBAR & ADAPTIVE COMPACT LAYOUTS
+   ------------------------------------------------------------- */
+@media (max-width: 1250px) {
+  .radar-badge-trigger .badge-pill {
+    display: none;
+  }
+  .navbar-container {
+    padding: 0 20px;
+  }
+}
+
+@media (max-width: 1080px) {
+  .navbar-container {
+    padding: 0 16px;
+  }
+  .nav-left, .nav-right {
+    gap: 8px;
+  }
+  .profile-label .user-role {
+    display: none;
+  }
+  .user-name {
+    max-width: 110px;
+  }
+  .nav-links {
+    margin-left: 6px;
+  }
+}
+
+@media (max-width: 880px) {
+  .nav-center {
+    display: none;
+  }
+  .btn-pill-ghost span {
+    display: none;
+  }
+  .btn-pill-ghost {
+    padding: 6px 10px;
+  }
+}
+

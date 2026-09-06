@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Shield, 
   Lock, 
@@ -38,9 +38,24 @@ export const Navbar: React.FC<Props> = ({
 }) => {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const profileMenuRef = useRef<HTMLDivElement>(null);
   const isVaultUnlocked = CryptoVault.isUnlocked();
   const isLiveFirebase = FirebaseService.isLiveFirebase();
   const sandboxUsers = FirebaseService.getAvailableSandboxUsers();
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+        setShowUserDropdown(false);
+      }
+    };
+    if (showUserDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showUserDropdown]);
 
   const toggleTheme = () => {
     const nextTheme = theme === 'light' ? 'dark' : 'light';
@@ -148,10 +163,13 @@ export const Navbar: React.FC<Props> = ({
 
         {/* User Account / Evaluator Switcher */}
         {user ? (
-          <div className="profile-menu-wrapper">
+          <div className="profile-menu-wrapper" ref={profileMenuRef}>
             <button 
-              className="profile-btn"
+              type="button"
+              className={`profile-btn ${showUserDropdown ? 'active' : ''}`}
               onClick={() => setShowUserDropdown(!showUserDropdown)}
+              title={`${user.displayName} (${isLiveFirebase ? 'Firebase Auth' : 'Sandbox Evaluator'})`}
+              aria-expanded={showUserDropdown}
             >
               <div className="avatar-circle">
                 {user.displayName.charAt(0).toUpperCase()}
@@ -162,7 +180,7 @@ export const Navbar: React.FC<Props> = ({
                   {isLiveFirebase ? 'Firebase Auth' : 'Sandbox Evaluator'}
                 </span>
               </div>
-              <ChevronDown size={14} className="text-muted" />
+              <ChevronDown size={14} className={`profile-chevron text-muted ${showUserDropdown ? 'rotated' : ''}`} />
             </button>
 
             {showUserDropdown && (
